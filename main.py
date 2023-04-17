@@ -44,14 +44,13 @@ def find_smooth(factor_base, N):
     root = isqrt(N) + 1
 # tries to find B-smooth numbers in sieve_seq, using sieving
 
-    def sieve_prep(N):
+    def sieve_prep(N, root):
     # generates a sequence from Y(x) = x^2 - N, starting at x = root 
-        x = isqrt(N) + 1
-        sieve_seq = [(x+i)**2 - N for i in range(6 * len(factor_base))]
+        sieve_seq = [(root+i)**2 - N for i in range(6 * len(factor_base))]
 
         return sieve_seq
 
-    sieve_seq = sieve_prep(N)
+    sieve_seq = sieve_prep(N, root)
     sieve_list = sieve_seq.copy() # keep a copy of sieve_seq for later
     if factor_base[0] == 2:
         i = 0
