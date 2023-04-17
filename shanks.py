@@ -1,66 +1,19 @@
-def quad_residue(a,n):
-    #checks if a is quad residue of n
-    l=1
-    q=(n-1)//2
-    x = q**l
-    if x==0:
-        return 1
-        
-    a =a%n
-    z=1
-    while x!= 0:
-        if x%2==0:
-            a=(a **2) % n
-            x//= 2
-        else:
-            x-=1
-            z=(z*a) % n
+# "Tonelli-Shanks algorithm." Rosetta Code, . 4 Mar 2023, 18:05 UTC. 17 Apr 2023, 22:42 <https://rosettacode.org/w/index.php?title=Tonelli-Shanks_algorithm&oldid=338204>. #
 
-    return z
+def legendre(a, p):
+    return pow(a, (p - 1) // 2, p)
 
-
-def gcd(a,b):
-	if b==0:
-		return a
-	else:
-		return gcd(b, a%b)
-
-# Returns k such that b^k = 1 (mod p)
-def order(p,q):
-	if gcd(p,q) !=1:
-		print(p,' and ',q,'are not co-prime')
-		return -1
-	k=3
-	while True:
-		if pow(q,k,p)==1:
-			return k
-		k+=1
-
-# function return p - 1 (= x argument) as x * 2^e,
-# where x will be odd sending e as reference because
-# updation is needed in actual e
-def convertx2e(x):
-	e=0
-	while x%2==0:
-		x/=2
-		e+=1
-	return int(x),e
-
-# Main function for finding the modular square root
-def STonelli(n, p): #tonelli-shanks to solve modular square root, x^2 = N (mod p)
-    assert quad_residue(n, p) == 1, "not a square (mod p)"
+def tonelli(n, p):
+    assert legendre(n, p) == 1, "not a square (mod p)"
     q = p - 1
     s = 0
-    
     while q % 2 == 0:
         q //= 2
         s += 1
     if s == 1:
-        r = pow(n, (p + 1) // 4, p)
-        return r,p-r
+        return pow(n, (p + 1) // 4, p)
     for z in range(2, p):
-        #print(quad_residue(z, p))
-        if p - 1 == quad_residue(z, p):
+        if p - 1 == legendre(z, p):
             break
     c = pow(z, q, p)
     r = pow(n, (q + 1) // 2, p)
@@ -78,14 +31,14 @@ def STonelli(n, p): #tonelli-shanks to solve modular square root, x^2 = N (mod p
         c = (b * b) % p
         t = (t * c) % p
         m = i
-
-    return (r,p-r)
-
-def main():
-	n=2
-	p=113
-	print(STonelli(n,p))
-
+    return r
 
 if __name__ == '__main__':
-	main()
+    ttest = [(10, 13), (56, 101), (1030, 10009), (44402, 100049),
+	     (665820697, 1000000009), (881398088036, 1000000000039),
+             (41660815127637347468140745042827704103445750172002, 10**50 + 577)]
+    for n, p in ttest:
+        r = tonelli(n, p)
+        assert (r * r - n) % p == 0
+        print("n = %d p = %d" % (n, p))
+        print("\t  roots : %d %d" % (r, p - r))

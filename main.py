@@ -1,6 +1,6 @@
 from math import fabs, ceil, sqrt, exp, log, isqrt
 import random
-from shanks import STonelli
+from shanks import tonelli
 
 #O( NLog(Log N))
 def sieve_of_eratosthenes(n):
@@ -42,7 +42,7 @@ def factor_base(n):
 
 def find_smooth(factor_base, N):
     root = isqrt(N) + 1
-# tries to find B-smooth numbers in sieve_seq, using sieving
+# tries to find B-smooth numbers in sieve_seq, using sieving, ie numbers in sieve_seq that have only prime factors in factor_base
 
     def sieve_prep(N, root):
     # generates a sequence from Y(x) = x^2 - N, starting at x = root 
@@ -61,36 +61,83 @@ def find_smooth(factor_base, N):
                 sieve_list[j] //= 2
     #print("")
     for p in factor_base[1:]: #not including 2
-        residues = STonelli(N,p) #finds x such that x^2 = n (mod p). There are two start solutions
-        
+        residues = tonelli(N,p) #finds x such that x^2 = N (mod p). There are two start solutions
         for r in residues:
             for i in range((r-root) % p, len(sieve_list), p): # Now every pth term will also be divisible
                 while sieve_list[i] % p == 0: #account for prime powers
                     sieve_list[i] //= p
-    xlist = [] #original x terms
+                    
+    #xlist = [] #original x terms
     smooth_nums = []
-    indices = [] # index of discovery
+    #indices = [] # index of discovery
     
     for i in range(len(sieve_list)):
-        if len(smooth_nums) >= len(factor_base)+T: #probability of no solutions is 2^-T
+        if len(smooth_nums) >= len(factor_base): # found enough B-smooth numbers
             break
         if sieve_list[i] == 1: # found B-smooth number
             smooth_nums.append(sieve_seq[i])
-            xlist.append(i+root)
-            indices.append(i)
+           # xlist.append(i+root)
+            #indices.append(i)
 
-    return(smooth_nums,xlist,indices)
+    return smooth_nums
   
-# def B_smooth_values(n, factor_base):
-#   B_smooth_values = []
-#   x = isqrt(n) + 1
-#   for i in range(x, len(factor_base)+1):
-#     # if gcd(i, n) == 1:
-#     #   smooth_values.append(i)
+
+def build_matrix(smooth_nums,factor_base):
+# generates exponent vectors mod 2 from previously obtained smooth numbers, then builds matrix
+
+    def factor(n,factor_base):#trial division from factor base
+        factors = []
+        if n < 0:
+            factors.append(-1)
+        for p in factor_base:
+            if p == -1:
+                pass
+            else:
+                while n % p == 0:
+                    factors.append(p)
+                    n //= p
+        return factors
+
+    M = []
+    factor_base.insert(0,-1)
+    for n in smooth_nums:
+        exp_vector = [0]*(len(factor_base))
+        n_factors = factor(n,factor_base)
+        #print(n,n_factors)
+        for i in range(len(factor_base)):
+            if factor_base[i] in n_factors:
+                exp_vector[i] = (exp_vector[i] + n_factors.count(factor_base[i])) % 2
+
+        #print(n_factors, exp_vector)
+        if 1 not in exp_vector: #search for squares
+            return True, n
+        else:
+            pass
+        
+        M.append(exp_vector)  
+    #print("Matrix built:")
+    #mprint(M)
+    return(False, transpose(M))
+
+    
+def transpose(matrix):
+#transpose matrix so columns become rows, makes list comp easier to work with
+    new_matrix = []
+    for i in range(len(matrix[0])):
+        new_row = []
+        for row in matrix:
+            new_row.append(row[i])
+        new_matrix.append(new_row)
+    return(new_matrix)
+
 
 def quad_sieve(n):
   B = smoothness_bound(n)
   factor_base = factor_base(B)
+  smooth_nums = find_smooth(factor_base, n)
+  print("smooth_nums: ", smooth_nums)
+
+  print("Building matrix...")
 
 
 
