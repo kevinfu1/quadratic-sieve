@@ -42,6 +42,7 @@ def factor_base(n):
     return factor_base
 
 def find_smooth(factor_base, N):
+    root = isqrt(N) + 1
 # tries to find B-smooth numbers in sieve_seq, using sieving
 
     def sieve_prep(N):
