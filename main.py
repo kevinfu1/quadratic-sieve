@@ -2,6 +2,7 @@ from math import fabs, ceil, sqrt, exp, log, isqrt
 import random
 from shanks import STonelli
 
+#O( NLog(Log N))
 def sieve_of_eratosthenes(n):
   #""" Returns  a list of primes < n """
   if n <= 2:
@@ -11,7 +12,7 @@ def sieve_of_eratosthenes(n):
       if sieve[p]:
         for multiple in range(p*p, n, p):
           sieve[multiple] = False
-  return [2] + [i for i in range(3,n,2) if sieve[i]]
+  return  [i for i in range(3,n,2) if sieve[i]]
 
 # Euclid's algorithm
 def gcd(a, b):
@@ -24,8 +25,6 @@ def gcd(a, b):
 
 def smoothness_bound(N):
     B = exp(sqrt(log(N)*log(log(N)))*0.5)
-    #I = F**3
-    #print(F,I)
     return int(B)
 
 # Euler criterion using Legendre symbol
@@ -39,7 +38,7 @@ def factor_base(n):
     for p in primes:
         if legendre_symbol(n, p) == 1:
             factor_base.append(p)
-    return factor_base
+    return [2] + factor_base
 
 def find_smooth(factor_base, N):
     root = isqrt(N) + 1
@@ -48,7 +47,7 @@ def find_smooth(factor_base, N):
     def sieve_prep(N):
     # generates a sequence from Y(x) = x^2 - N, starting at x = root 
         x = isqrt(N) + 1
-        sieve_seq = [(x+i)**2 - N for i in range(len(factor_base))]
+        sieve_seq = [(x+i)**2 - N for i in range(6 * len(factor_base))]
 
         return sieve_seq
 
