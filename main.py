@@ -175,46 +175,86 @@ def dot(x, y):
         z += x[i] * y[i]
     return z
 
-def qr_householder(A):
+def householder(x):
     """
-    Compute the QR decomposition of a matrix using the Householder algorithm.
-        
+    Compute the Householder reflection that maps x to a multiple of the first standard basis vector.
+    
+    Arguments:
+    x -- the input vector
+    
+    Returns:
+    H -- the Householder reflection matrix
+    """
+    n = len(x)
+    v = x[:]
+    sign = 1 if v[0] >= 0 else -1
+    norm = 0
+    for i in range(n):
+        norm += v[i] * v[i]
+    norm = sign * (norm ** 0.5)
+    v[0] += norm
+    beta = 2 / dot(v, v)
+    H = [[beta * v[i] * v[j] for j in range(n)] for i in range(n)]
+    for i in range(n):
+        H[i][i] -= beta
+    return H
+
+
+
+def qr(A):
+    """
+    Compute the QR decomposition of a matrix A using Householder reflections.
+    
     Arguments:
     A -- the input matrix
-        
+    
     Returns:
-    Q -- the orthogonal matrix Q in the QR decomposition
-    R -- the upper triangular matrix R in the QR decomposition
+    Q -- the orthogonal matrix Q
+    R -- the upper triangular matrix R
     """
-    m, n = len(A), len(A[0])
-    Q = [[0.0] * m for _ in range(m)]
-    R = [[0.0] * n for _ in range(n)]
-
-    for j in range(n):
-        x = [row[j] for row in A]
-        norm_x = 0.0
-        for i in range(m):
-            norm_x += x[i] * x[i]
-        norm_x = norm_x ** 0.5
-        if x[0] < 0:
-            norm_x = -norm_x
-        v = [0.0] * m
-        v[0] = x[0] + norm_x
-        for i in range(1, m):
-            v[i] = x[i]
-        tau = 2.0 / dot(v, v)
-        for i in range(n):
-            R[j][i] = tau * dot(matvec(A, v), [row[i] for row in A])
-        for i in range(m):
-            Q[i][j] = v[i] / norm_x
-            for k in range(j + 1, n):
-                A[i][k] -= v[i] * R[j][k]
-        x = matvec(Q, v)
-        for i in range(m):
-            for k in range(j + 1, n):
-                A[i][k] -= x[i] * R[j][k]
-
+    n = len(A)
+    m = len(A[0])
+    Q = [[float(i == j) for j in range(n)] for i in range(n)]
+    R = A[:]
+    
+    for j in range(m):
+        v = [R[i][j] for i in range(j, n)]
+        H = householder(v)
+        Q = matvec(H, Q)
+        R = matvec(H, R)
+    
     return Q, R
+
+
+def eig(A, tol=1e-12):
+    """
+    Compute the eigenvalues and eigenvectors of a symmetric tridiagonal matrix A using the QR algorithm.
+    
+    Arguments:
+    A -- the input symmetric tridiagonal matrix
+    tol -- the tolerance for determining convergence (default 1e-12)
+    
+    Returns:
+    eigvals -- a list of the eigenvalues of A
+    eigvecs -- a list of the eigenvectors of A
+    """
+    n = len(A)
+    eigvals = [A[i][i] for i in range(n)]
+    eigvecs = [[float(i == j) for j in range(n)] for i in range(n)]
+    converged = False
+    
+    while not converged:
+        Q, R = qr(A)
+        A = matvec(R, Q)
+        eigvecs = matvec(Q, eigvecs)
+        converged = True
+        for i in range(n-1):
+            if abs(A[i+1][i]) > tol:
+                converged = False
+                break
+    
+    return eigvals, eigvecs
+
 
 
 def quad_sieve(n):
