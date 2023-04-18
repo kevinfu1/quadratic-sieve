@@ -32,16 +32,14 @@ def legendre_symbol(a, p):
     ls = pow(a, (p-1)//2, p)
     return ls if ls == 1 else -1
 
+#changed factor base to add -1 as possibility as well incase number is negative
 def factor_base(n, b):
     primes = sieve_of_eratosthenes(b)
-    print("primes: ", primes)
-    factor_base = []
+    factor_base = [-1, 2]  # add -1 and 2 to the factor base
     for p in primes:
-        #print("p = ", p)
-        #print("legendre_symbol(n, p): ", legendre_symbol(n, p))
         if legendre_symbol(n, p) == 1:
             factor_base.append(p)
-    return [2] + factor_base
+    return factor_base
 
 def find_smooth(factor_base, N):
     root = isqrt(N) + 1
@@ -127,16 +125,27 @@ def build_matrix(smooth_nums,factor_base):
     #mprint(M)
     return(False, transpose(M))
 
+def check_for_square(smooth_nums, xlist, t_matrix, n):
+    is_square = False
+    factor1 = None
+    factor2 = None
     
+    for i in range(len(smooth_nums)):
+        if smooth_nums[i] == t_matrix:
+            x = xlist[i]
+            sqrt_candidate = isqrt(x**2 - n)
+            if sqrt_candidate**2 == x**2 - n:
+                is_square = True
+                factor1 = gcd(x+sqrt_candidate, n)
+                factor2 = gcd(x-sqrt_candidate, n)
+                break
+                
+    return is_square, factor1, factor2
+
+#optimize transpose
 def transpose(matrix):
 #transpose matrix so columns become rows, makes list comp easier to work with
-    new_matrix = []
-    for i in range(len(matrix[0])):
-        new_row = []
-        for row in matrix:
-            new_row.append(row[i])
-        new_matrix.append(new_row)
-    return(new_matrix)
+    return [list(row) for row in zip(*matrix)]
 
 def matvec(A, x):
     """
@@ -302,6 +311,13 @@ def quad_sieve(n):
   print("smooth_nums: ", smooth_nums)
 
   print("Building matrix...")
+  t_matrix = build_matrix(smooth_nums,factor_base)
+
+  is_square, factor1, factor2 = check_for_square(smooth_nums, xlist, t_matrix, n)
+
+  if is_square:
+    print("Found a square!")
+    return factor1, factor2
 
 
 if __name__ == "__main__":
