@@ -32,16 +32,20 @@ def legendre_symbol(a, p):
     ls = pow(a, (p-1)//2, p)
     return ls if ls == 1 else -1
 
-def factor_base(n):
-    primes = sieve_of_eratosthenes(n)
+def factor_base(n, b):
+    primes = sieve_of_eratosthenes(b)
+    print("primes: ", primes)
     factor_base = []
     for p in primes:
+        #print("p = ", p)
+        #print("legendre_symbol(n, p): ", legendre_symbol(n, p))
         if legendre_symbol(n, p) == 1:
             factor_base.append(p)
     return [2] + factor_base
 
 def find_smooth(factor_base, N):
     root = isqrt(N) + 1
+    print("root = ", root)
 # tries to find B-smooth numbers in sieve_seq, using sieving, ie numbers in sieve_seq that have only prime factors in factor_base
 
     def sieve_prep(N, root):
@@ -61,13 +65,17 @@ def find_smooth(factor_base, N):
                 sieve_list[j] //= 2
     #print("")
     for p in factor_base[1:]: #not including 2
+        #print("p = ", p)
         residues = tonelli(N,p) #finds x such that x^2 = N (mod p). There are two start solutions
+        #print("residues: ", residues)
         for r in residues:
             for i in range((r-root) % p, len(sieve_list), p): # Now every pth term will also be divisible
                 while sieve_list[i] % p == 0: #account for prime powers
                     sieve_list[i] //= p
                     
     #xlist = [] #original x terms
+    print("sieve_seq: ", sieve_seq)
+    print("sieve_list: ", sieve_list)
     smooth_nums = []
     #indices = [] # index of discovery
     
@@ -133,69 +141,14 @@ def transpose(matrix):
 
 def quad_sieve(n):
   B = smoothness_bound(n)
-  factor_base = factor_base(B)
-  smooth_nums = find_smooth(factor_base, n)
+  print("B = ", B)
+  factor_b = factor_base(n, B)
+  print("factor_base: ", factor_b)
+  smooth_nums = find_smooth(factor_b, n)
   print("smooth_nums: ", smooth_nums)
 
   print("Building matrix...")
 
 
-
-# def isqrt(n): # Newton's method, returns exact int for large squares
-#     x = n
-#     y = (x + 1) // 2
-#     while y < x:
-#         x = y
-#         y = (x + n // x) // 2
-#     return x
-
-# def sieve(n, b):
-#     primes = [i for i in range(2, b+1) if is_prime(i)]
-#     factor_base = []
-#     for p in primes:
-#         if legendre_symbol(n, p) == 1:
-#             e = 0
-#             while n % p == 0:
-#                 n //= p
-#                 e += 1
-#             factor_base.append((p, e))
-#     if n > 1:
-#         return None
-#     return factor_base
-
-# def quad_residue(a, n, p):
-#     x = pow(a, (p+1)//4, p)
-#     return x if pow(x, 2, p) == a else n-x
-
-
-
-# def smooth_sieve(n, b, factor_base):
-#     sieve = []
-#     for i in range(1, b+1):
-#         x = quad_residue(i, n, factor_base[0])
-#         factors = []
-#         for p in factor_base:
-#             e = 0
-#             while x % p == 0:
-#                 x //= p
-#                 e += 1
-#             factors.append(e)
-#         sieve.append((i, factors))
-#     return sieve
-
-# def matrix_rank(matrix):
-#     # Implement Gaussian elimination to determine the rank of the matrix
-#     m, n = len(matrix), len(matrix[0])
-#     rank = 0
-#     for j in range(n):
-#         for i in range(rank, m):
-#             if matrix[i][j] != 0:
-#                 for k in range(j, n):
-#                     matrix[i][k], matrix[rank][k] = matrix[rank][k], matrix[i][k]
-#                 for u in range(rank+1, m):
-#                     if matrix[u][j] != 0:
-#                         c = matrix[u][j] * pow(matrix[rank][j], -1, n)
-#                         for v in range(j, n):
-#                             matrix[u][v] = (matrix[u][v] - c * matrix[rank][v]) % n
-#                 rank += 1
-               
+if __name__ == "__main__":
+  quad_sieve(227179)
