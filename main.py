@@ -255,6 +255,42 @@ def eig(A, tol=1e-12):
     
     return eigvals, eigvecs
 
+def block_lanczos(A, m, tol=1e-12):
+    """
+    Compute the left null space of a matrix A using the block Lanczos algorithm.
+    
+    Arguments:
+    A -- the input matrix
+    m -- the number of block Lanczos iterations to perform
+    tol -- the tolerance for determining linear independence (default 1e-12)
+    
+    Returns:
+    V -- the orthonormal basis for the left null space of A
+    """
+    n = len(A)
+    k = len(A[0])
+    V = [[random.uniform(-1, 1) for _ in range(m)] for _ in range(k)]
+    Q = qr(V)
+    H = [[0] * m for _ in range(m)]
+    
+    for i in range(m):
+        w = matvec(A, Q[:, i])
+        for j in range(i):
+            H[j][i] = dot(Q[:, j], w)
+            w = [w[k] - H[j][i] * Q[k][j] for k in range(n)]
+        H[i][i] = sqrt(dot(w, w))
+        if H[i][i] < tol:
+            break
+        Q[:, i+1] = [w[k] / H[i][i] for k in range(n)]
+        
+    T = [H[i][:i+1] for i in range(i+1)]
+    eigvals, eigvecs = eig(T)
+    idx = [abs(eigvals[i]) < tol for i in range(len(eigvals))]
+    nullspace_basis = [[0] * sum(idx) for _ in range(n)]
+    for i in range(n):
+        for j in range(sum(idx)):
+            nullspace_basis[i][j] = dot(V[k], eigvecs[k][j] * Q[:, k])
+    return nullspace_basis
 
 
 def quad_sieve(n):
