@@ -91,39 +91,33 @@ def find_smooth(factor_base, N):
 def build_matrix(smooth_nums,factor_base):
 # generates exponent vectors mod 2 from previously obtained smooth numbers, then builds matrix
 
-    def factor(n,factor_base):#trial division from factor base
+    def factor(n, factor_base):
         factors = []
         if n < 0:
             factors.append(-1)
+            n = -n
         for p in factor_base:
-            if p == -1:
-                pass
-            else:
+            if p != -1 and n % p == 0:
                 while n % p == 0:
                     factors.append(p)
                     n //= p
+        if n > 1:
+            factors.append(n)
         return factors
 
     M = []
-    factor_base.insert(0,-1)
+    square_found = False
     for n in smooth_nums:
-        exp_vector = [0]*(len(factor_base))
-        n_factors = factor(n,factor_base)
-        #print(n,n_factors)
-        for i in range(len(factor_base)):
-            if factor_base[i] in n_factors:
-                exp_vector[i] = (exp_vector[i] + n_factors.count(factor_base[i])) % 2
-
-        #print(n_factors, exp_vector)
-        if 1 not in exp_vector: #search for squares
+        exp_vector = [0] * len(factor_base)
+        n_factors = factor(n, factor_base)
+        for i, p in enumerate(factor_base):
+            if p in n_factors:
+                exp_vector[i] = (exp_vector[i] + n_factors.count(p)) % 2
+        M.append(exp_vector)
+        if not square_found and all(e == 0 for e in exp_vector):
+            square_found = True
             return True, n
-        else:
-            pass
-        
-        M.append(exp_vector)  
-    #print("Matrix built:")
-    #mprint(M)
-    return(False, transpose(M))
+    return False, transpose(M)
 
 def check_for_square(smooth_nums, xlist, t_matrix, n):
     is_square = False
