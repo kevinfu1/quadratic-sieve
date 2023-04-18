@@ -138,6 +138,84 @@ def transpose(matrix):
         new_matrix.append(new_row)
     return(new_matrix)
 
+def matvec(A, x):
+    """
+    Compute the matrix-vector product A*x.
+    
+    Arguments:
+    A -- the input matrix
+    x -- the input vector
+    
+    Returns:
+    y -- the product A*x
+    """
+    n = len(A)
+    m = len(x)
+    y = [0] * n
+    for i in range(n):
+        for j in range(m):
+            y[i] += A[i][j] * x[j]
+    return y
+
+
+def dot(x, y):
+    """
+    Compute the dot product of two vectors.
+    
+    Arguments:
+    x -- the first input vector
+    y -- the second input vector
+    
+    Returns:
+    z -- the dot product of x and y
+    """
+    n = len(x)
+    z = 0
+    for i in range(n):
+        z += x[i] * y[i]
+    return z
+
+def qr_householder(A):
+    """
+    Compute the QR decomposition of a matrix using the Householder algorithm.
+        
+    Arguments:
+    A -- the input matrix
+        
+    Returns:
+    Q -- the orthogonal matrix Q in the QR decomposition
+    R -- the upper triangular matrix R in the QR decomposition
+    """
+    m, n = len(A), len(A[0])
+    Q = [[0.0] * m for _ in range(m)]
+    R = [[0.0] * n for _ in range(n)]
+
+    for j in range(n):
+        x = [row[j] for row in A]
+        norm_x = 0.0
+        for i in range(m):
+            norm_x += x[i] * x[i]
+        norm_x = norm_x ** 0.5
+        if x[0] < 0:
+            norm_x = -norm_x
+        v = [0.0] * m
+        v[0] = x[0] + norm_x
+        for i in range(1, m):
+            v[i] = x[i]
+        tau = 2.0 / dot(v, v)
+        for i in range(n):
+            R[j][i] = tau * dot(matvec(A, v), [row[i] for row in A])
+        for i in range(m):
+            Q[i][j] = v[i] / norm_x
+            for k in range(j + 1, n):
+                A[i][k] -= v[i] * R[j][k]
+        x = matvec(Q, v)
+        for i in range(m):
+            for k in range(j + 1, n):
+                A[i][k] -= x[i] * R[j][k]
+
+    return Q, R
+
 
 def quad_sieve(n):
   B = smoothness_bound(n)
