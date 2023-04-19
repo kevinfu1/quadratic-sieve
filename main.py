@@ -87,23 +87,22 @@ def find_smooth(factor_base, N):
 
     return smooth_nums
   
+def factor(n, factor_base):
+    factors = []
+    if n < 0:
+        factors.append(-1)
+        n = -n
+    for p in factor_base:
+        if p != -1 and n % p == 0:
+            while n % p == 0:
+                factors.append(p)
+                n //= p
+    if n > 1:
+        factors.append(n)
+    return factors
 
 def build_matrix(smooth_nums,factor_base):
 # generates exponent vectors mod 2 from previously obtained smooth numbers, then builds matrix
-
-    def factor(n, factor_base):
-        factors = []
-        if n < 0:
-            factors.append(-1)
-            n = -n
-        for p in factor_base:
-            if p != -1 and n % p == 0:
-                while n % p == 0:
-                    factors.append(p)
-                    n //= p
-        if n > 1:
-            factors.append(n)
-        return factors
 
     M = []
     square_found = False
@@ -116,25 +115,28 @@ def build_matrix(smooth_nums,factor_base):
         M.append(exp_vector)
         if not square_found and all(e == 0 for e in exp_vector):
             square_found = True
-            return True, n
-    return False, transpose(M)
+            return square_found, n
+    return square_found, transpose(M)
 
-def check_for_square(smooth_nums, xlist, t_matrix, n):
-    is_square = False
-    factor1 = None
-    factor2 = None
-    
-    for i in range(len(smooth_nums)):
-        if smooth_nums[i] == t_matrix:
-            x = xlist[i]
-            sqrt_candidate = isqrt(x**2 - n)
-            if sqrt_candidate**2 == x**2 - n:
-                is_square = True
-                factor1 = gcd(x+sqrt_candidate, n)
-                factor2 = gcd(x-sqrt_candidate, n)
-                break
-                
-    return is_square, factor1, factor2
+def handleSquare(M, n, smooth_nums, xlist):
+    factor_1 = None
+    factor_2 = None
+    x = smooth_nums.index(M)
+    factor_1 = gcd(xlist[x]+sqrt(M),n)
+    factor_2 = n // factor_1   
+    return factor_1, factor_2
+
+def generate_xs(smooth_nums, factor_base, N):
+    root = isqrt(N) + 1
+    x_list = []
+    for n in smooth_nums:
+        x = root
+        for p in factor(n, factor_base):
+            if p != -1:
+                while x % p == 0 and (x**2 - N) // n % p == 0:
+                    x //= p
+        x_list.append(x)
+    return x_list
 
 #optimize transpose
 def transpose(matrix):
@@ -295,6 +297,14 @@ def block_lanczos(A, m, tol=1e-12):
             nullspace_basis[i][j] = dot(V[k], eigvecs[k][j] * Q[:, k])
     return nullspace_basis
 
+def solve(t_matrix, is_square, n, smooth_nums, factor_b):
+    if is_square:
+        xs = generate_xs(smooth_nums, factor_b, n)
+        factor_1, factor_2 = handleSquare(t_matrix, n, smooth_nums, xs)
+    else:
+        #solve matrix, how many iterations?
+        ln = block_lanczos(t_matrix, 10)
+    return factor_1, factor_2
 
 def quad_sieve(n):
   B = smoothness_bound(n)
@@ -305,13 +315,9 @@ def quad_sieve(n):
   print("smooth_nums: ", smooth_nums)
 
   print("Building matrix...")
-  t_matrix = build_matrix(smooth_nums,factor_base)
+  is_square, t_matrix = build_matrix(smooth_nums,factor_b)
 
-  is_square, factor1, factor2 = check_for_square(smooth_nums, xlist, t_matrix, n)
-
-  if is_square:
-    print("Found a square!")
-    return factor1, factor2
+  solve(t_matrix, is_square, n, smooth_nums, factor_b)
 
 
 if __name__ == "__main__":
