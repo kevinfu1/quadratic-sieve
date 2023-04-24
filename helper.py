@@ -70,7 +70,7 @@ def solve_row(sol_rows,M,marks,K=0):
     solution_vec.append(sol_rows[K][1])       
     return(solution_vec)
     
-def solve_1(solution_vec,smooth_nums,xlist,N):
+def solve(solution_vec,smooth_nums,xlist,N):
     
     solution_nums = [smooth_nums[i] for i in solution_vec]
     x_nums = [xlist[i] for i in solution_vec]

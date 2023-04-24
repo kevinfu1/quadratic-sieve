@@ -1,62 +1,109 @@
 from math import fabs, ceil, sqrt, exp, log, isqrt
-import random
+import random, time
 from shanks import tonelli
-from util import block_lanczos, transpose
-from helper import gauss_elim, solve_row, solve_1
-import time
+from helper import gauss_elim, solve_row, solve, transpose, gcd
 
-#O( NLog(Log N))
+
 def sieve_of_eratosthenes(n):
-  #""" Returns  a list of primes < n """
-  if n <= 2:
-    return []
-  sieve = [True] * n
-  for p in range(3,int(n**0.5)+1,2):
-      if sieve[p]:
-        for multiple in range(p*p, n, p):
-          sieve[multiple] = False
-  return  [i for i in range(3,n,2) if sieve[i]]
+    """
+    This function returns a list of primes less than n using the Sieve of Eratosthenes algorithm.
 
-# Euclid's algorithm
-def gcd(a, b):
-  if b == 0:
-        return a
-  elif a >= b:
-      return gcd(b,a % b)
-  else:
-      return gcd(b,a)
+    :param n: The upper bound for the list of primes.
+    :return: A list of primes less than n.
+
+    Time complexity: O(n * log(log(n)))
+    """
+
+    if n <= 2:  # If n is less than or equal to 2, there are no primes less than n
+        return []
+    sieve = [True] * n  # Creating a boolean list of size n, initialized to True
+    for p in range(3, int(n**0.5) + 1, 2):  # Iterating through odd numbers up to the square root of n
+        if sieve[p]:  # If the current number is prime
+            for multiple in range(p * p, n, p):  # Marking the multiples of the prime number as composite
+                sieve[multiple] = False
+    # Returning the list of prime numbers, skipping the even numbers
+    return [i for i in range(3, n, 2) if sieve[i]]
+
 
 def smoothness_bound(N):
-    B = exp(sqrt(log(N)*log(log(N)))*0.5)
-    return int(B)
+    """
+    This function computes the smoothness bound for the quadratic sieve algorithm.
 
-# Euler criterion using Legendre symbol
+    :param N: The number to be factored.
+    :return: The smoothness bound.
+
+    Time complexity: O(1)
+    """
+
+    B = exp(sqrt(log(N) * log(log(N))) * 0.5)  # Computing the smoothness bound using the formula B = exp(sqrt(log(N) * log(log(N))) * 0.5)
+    return int(B)  # Returning the smoothness bound as an integer
+
 def legendre_symbol(a, p):
-    ls = pow(a, (p-1)//2, p)
-    return ls if ls == 1 else -1
+    """
+    This function uses the Euler criterion to compute the Legendre symbol (a/p).
 
-#changed factor base to add -1 as possibility as well incase number is negative
+    :param a: The number whose symbol is to be computed.
+    :param p: The prime number.
+    :return: The Legendre symbol (a/p).
+
+    Time complexity: O(log(p)), where p is the prime number
+    """
+
+    ls = pow(a, (p - 1) // 2, p)  # Computing the Legendre symbol using the Euler criterion
+    return ls if ls == 1 else -1  # Returning the symbol, which is either 1 or -1 depending on the result of the computation
+
+
+# Time complexity: O(n * log(log(n))) due to sieve_of_eratosthenes call
 def factor_base(n, b):
-    primes = sieve_of_eratosthenes(b)
-    factor_base = [2]  # add -1 and 2 to the factor base
+    """
+    This function computes the factor base for the quadratic sieve algorithm.
+
+    :param n: The number to be factored.
+    :param b: The size of the factor base.
+    :return: A list containing the primes in the factor base.
+    """
+
+    primes = sieve_of_eratosthenes(b)  # Generating a list of primes up to b using the sieve of Eratosthenes
+    factor_base = [2]  # Adding -1 and 2 to the factor base
     for p in primes:
-        if legendre_symbol(n, p) == 1:
-            factor_base.append(p)
+        if legendre_symbol(n, p) == 1:  # Checking if n is a quadratic residue modulo p
+            factor_base.append(p)  # Adding p to the factor base if it meets the criteria
+
     return factor_base
 
+
 def find_smooth(factor_base, N, I, root):
-    #root = isqrt(N) + 1
-    #print("root = ", root)
-# tries to find B-smooth numbers in sieve_seq, using sieving, ie numbers in sieve_seq that have only prime factors in factor_base
+    """
+    This function finds B-smooth numbers for the quadratic sieve algorithm.
+
+    :param factor_base: A list of primes to be used as the factor base.
+    :param N: The number to be factored.
+    :param I: The size of the sieve interval.
+    :return: A tuple containing two lists. The first list contains the B-smooth numbers found, and the second
+             list contains the corresponding x values that were used to find those B-smooth numbers.
+    """
+
 
     def sieve_prep(N, root, sieve_int):
-    # generates a sequence from Y(x) = x^2 - N, starting at x = root 
-        #sieve_seq = [(root+i)**2 - N for i in range(100000000 * len(factor_base))]
-        sieve_seq = [x**2 - N for x in range(root,root+sieve_int)]
+        """
+        This function generates a sequence from Y(x) = x^2 - N, starting at x = root, which will be used for the sieve.
+
+        :param N: The number to be factored.
+        :param root: The integer square root of N plus 1.
+        :param sieve_int: The size of the sieve interval.
+        :return: A list containing the sieve sequence and the last number checked in this sieve sequence
+
+
+        """
+
+        sieve_seq = [x**2 - N for x in range(root,root+sieve_int)] # Generating the sieve sequence
         return sieve_seq, root+sieve_int
 
-    sieve_seq, new_root = sieve_prep(N, root, I)
-    sieve_list = sieve_seq.copy() # keep a copy of sieve_seq for later
+    # Prepare the sieve sequence
+    sieve_seq, new_root = sieve_prep(N, root, I) # Generating the sieve sequence
+    sieve_list = sieve_seq.copy() # Making a copy of sieve_seq for later
+
+    # Dividing out powers of 2 from the sieve sequence
     if factor_base[0] == 2:
         i = 0
         while sieve_list[i] % 2 != 0:
@@ -64,50 +111,55 @@ def find_smooth(factor_base, N, I, root):
         for j in range(i,len(sieve_list),2): # found the 1st even term, now every other term will also be even
             while sieve_list[j] % 2 == 0: #account for powers of 2
                 sieve_list[j] //= 2
-    #print("")
-    for p in factor_base[1:]: #not including 2
-        #print("p = ", p)
-        residues = tonelli(N,p) #finds x such that x^2 = N (mod p). There are two start solutions
-        #print("residues: ", residues)
+   
+    # Dividing out powers of primes from the sieve sequence
+    for p in factor_base[1:]:  # Looping through the factor base, not including 2
+        residues = tonelli(N,p)  # Finding the square roots of N modulo p
         for r in residues:
-            for i in range((r-root) % p, len(sieve_list), p): # Now every pth term will also be divisible
-                while sieve_list[i] % p == 0: #account for prime powers
+            for i in range((r-root) % p, len(sieve_list), p):
+                while sieve_list[i] % p == 0:
                     sieve_list[i] //= p
                     
-    xlist = [] #original x terms
-    #print("sieve_seq: ", sieve_seq)
-    #print("sieve_list: ", sieve_list)
-    smooth_nums = []
-    #indices = [] # index of discovery
+    # Finding the B-smooth numbers in the sieve sequence
+    xlist = []  # Creating an empty list to hold the corresponding original x values
+    smooth_nums = [] # Creating an empty list to hold the B-smooth numbers found
     
     for i in range(len(sieve_list)):
-        if len(smooth_nums) >= len(factor_base) + 1: # found enough B-smooth numbers
+        if len(smooth_nums) >= len(factor_base) + 1:  # If enough B-smooth numbers have been found, break out of the loop
             break
-        if sieve_list[i] == 1: # found B-smooth number
-            smooth_nums.append(sieve_seq[i])
-            xlist.append(i+root)
-            #indices.append(i)
+        if sieve_list[i] == 1:  # If the sieve value is 1, the corresponding number is B-smooth
+            smooth_nums.append(sieve_seq[i])  # Adding the B-smooth number to the list
+            xlist.append(i+root)  # Adding the corresponding x value to the list
 
     return smooth_nums, xlist, new_root
   
 def factor(n, factor_base):
+    """
+    This function factorizes a number using the given factor base.
+
+    :param n: The number to be factorized.
+    :param factor_base: The factor base to be used.
+    :return: A list of prime factors of n.
+
+    Time complexity: The time complexity of the function is O(k log n), n is the number to be factorized and k is the size of the factor base
+    """
+
     factors = []
     if n < 0:
         factors.append(-1)
         n = -n
-    for p in factor_base:
-        if p != -1 and n % p == 0:
-            while n % p == 0:
-                factors.append(p)
+    for p in factor_base:  # Checking if n is divisible by each prime in the factor base
+        if p != -1 and n % p == 0:  # If p is a factor of n
+            while n % p == 0:  # Divide n by p until it is no longer divisible by p
+                factors.append(p)  # Add p to the list of factors
                 n //= p
-    if n > 1:
+    if n > 1:  # If n is still greater than 1, it must be prime and is added to the list of factors
         factors.append(n)
     return factors
 
-def build_matrix(smooth_nums,factor_base):
-# generates exponent vectors mod 2 from previously obtained smooth numbers, then builds matrix
-# so number of columns is
 
+# Builds a matrix for the quadratic sieve algorithm
+def build_matrix(smooth_nums, factor_base):
     M = []
     square_found = False
     for n in smooth_nums:
@@ -122,14 +174,16 @@ def build_matrix(smooth_nums,factor_base):
             return square_found, n
     return square_found, transpose(M)
 
+# Handles the case when a perfect square is found
 def handleSquare(M, n, smooth_nums, xlist):
     factor_1 = None
     factor_2 = None
     x = smooth_nums.index(M)
-    factor_1 = gcd(xlist[x]+sqrt(M),n)
-    factor_2 = n // factor_1   
+    factor_1 = gcd(xlist[x] + sqrt(M), n)
+    factor_2 = n // factor_1
     return factor_1, factor_2
 
+# Generates x values for the quadratic sieve algorithm
 def generate_xs(smooth_nums, factor_base, N):
     root = isqrt(N) + 1
     x_list = []
@@ -141,31 +195,6 @@ def generate_xs(smooth_nums, factor_base, N):
                     x //= p
         x_list.append(x)
     return x_list
-
-def solve(t_matrix, is_square, n, smooth_nums, factor_b, xlist):
-    if is_square:
-        xs = generate_xs(smooth_nums, factor_b, n)
-        factor_1, factor_2 = handleSquare(t_matrix, n, smooth_nums, xs)
-    else:
-        #solve matrix, how many iterations?
-       #ln = block_lanczos(t_matrix, 10)
-       sol_rows, marks, M = gauss_elim(t_matrix)
-       print("M: ", M)
-       print("sol_rows: ", sol_rows)
-       solution_vec = solve_row(sol_rows, M, marks, 0)
-       print("solution_vec: ", solution_vec)
-       factor = solve_1(solution_vec, smooth_nums, xlist, n)
-       print("factor: ", factor)
-       for K in range(1,len(sol_rows)):
-        if (factor == 1 or factor == n):
-            print("Didn't work. Trying different solution vector...")
-            solution_vec = solve_row(sol_rows,M,marks,K)
-            factor = solve_1(solution_vec,smooth_nums,xlist,n)
-        else:
-            print("Found factors!")
-            return factor, int(n/factor)
-    return("Didn't find any nontrivial factors!")
-    #return factor_1, factor_2
 
 def quad_sieve(n, I):
   B = smoothness_bound(n)
@@ -200,13 +229,13 @@ def quad_sieve(n, I):
     print("sol_rows: ", sol_rows)
     solution_vec = solve_row(sol_rows, M, marks, 0)
     print("solution_vec: ", solution_vec)
-    factor = solve_1(solution_vec, smooth_nums, xlist, n)
+    factor = solve(solution_vec, smooth_nums, xlist, n)
     print("factor: ", factor)
     for K in range(1,len(sol_rows)):
       if (factor == 1 or factor == n):
           print("Didn't work. Trying different solution vector...")
           solution_vec = solve_row(sol_rows,M,marks,K)
-          factor = solve_1(solution_vec,smooth_nums,xlist,n)
+          factor = solve(solution_vec,smooth_nums,xlist,n)
       else:
           print("Found factors!")
           return factor, int(n/factor)
@@ -215,11 +244,12 @@ def quad_sieve(n, I):
 
 
 if __name__ == "__main__":
-  start_time = time.time()
-  #print(quad_sieve(16921456439215439701,10000))
+    start_time = time.time()
+    #print(quad_sieve(16921456439215439701,10000))
   
-  #print(quad_sieve(46839566299936919234246726809, pow(10, 4)))
-  #print(quad_sieve(16921456439215439701, 100000000))
+#   print(quad_sieve(46839566299936919234246726809, pow(10, 4)))
 
-  print(quad_sieve(3744843080529615909019181510330554205500926021947, 10000))
-  print("--- %s seconds ---" % (time.time() - start_time))
+    #print(quad_sieve(6172835808641975203638304919691358469663, pow(10, 4)))
+
+    print(quad_sieve(3744843080529615909019181510330554205500926021947, 10000))
+    print("--- %s seconds ---" % (time.time() - start_time))
