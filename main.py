@@ -173,7 +173,9 @@ def quad_sieve(n, I):
   print("factor_base: ", factor_b)
   smooth_nums, xlist = find_smooth(factor_b, n, I)
   print("smooth_nums: ", smooth_nums)
-  #smooth_nums.append(3583125)
+
+  if len(smooth_nums) < len(factor_base):
+    return("Not enough smooth numbers. Increase the sieve interval or size of the factor base.")
 
   print("Building matrix...")
   is_square, t_matrix = build_matrix(smooth_nums,factor_b)
