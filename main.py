@@ -207,7 +207,9 @@ def quad_sieve(n, I):
 
 if __name__ == "__main__":
   start_time = time.time()
-  print(quad_sieve(16921456439215439701,10000000))
-  print("--- %s seconds ---" % (time.time() - start_time))
-  #print(quad_sieve(46839566299936919234246726809, pow(10, 15)))
+  #print(quad_sieve(16921456439215439701,10000000))
+  
+  print(quad_sieve(46839566299936919234246726809, pow(10, 8)))
   #print(quad_sieve(16921456439215439701, 100000000))
+
+  print("--- %s seconds ---" % (time.time() - start_time))
