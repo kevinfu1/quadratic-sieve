@@ -44,18 +44,18 @@ def factor_base(n, b):
             factor_base.append(p)
     return factor_base
 
-def find_smooth(factor_base, N, I):
-    root = isqrt(N) + 1
-    print("root = ", root)
+def find_smooth(factor_base, N, I, root):
+    #root = isqrt(N) + 1
+    #print("root = ", root)
 # tries to find B-smooth numbers in sieve_seq, using sieving, ie numbers in sieve_seq that have only prime factors in factor_base
 
     def sieve_prep(N, root, sieve_int):
     # generates a sequence from Y(x) = x^2 - N, starting at x = root 
         #sieve_seq = [(root+i)**2 - N for i in range(100000000 * len(factor_base))]
         sieve_seq = [x**2 - N for x in range(root,root+sieve_int)]
-        return sieve_seq
+        return sieve_seq, root+sieve_int
 
-    sieve_seq = sieve_prep(N, root, I)
+    sieve_seq, new_root = sieve_prep(N, root, I)
     sieve_list = sieve_seq.copy() # keep a copy of sieve_seq for later
     if factor_base[0] == 2:
         i = 0
@@ -88,7 +88,7 @@ def find_smooth(factor_base, N, I):
             xlist.append(i+root)
             #indices.append(i)
 
-    return smooth_nums, xlist
+    return smooth_nums, xlist, new_root
   
 def factor(n, factor_base):
     factors = []
@@ -171,9 +171,18 @@ def quad_sieve(n, I):
   B = smoothness_bound(n)
   print("B = ", B)
   factor_b = factor_base(n, B)
-  print("factor_base: ", factor_b)
-  smooth_nums, xlist = find_smooth(factor_b, n, I)
+  #print("factor_base: ", factor_b)
+  smooth_nums = []
+  xlist = []
+  root = isqrt(n) + 1
+  while len(smooth_nums) < len(factor_b):
+    smooth, x, root = find_smooth(factor_b, n, I, root)
+    smooth_nums += smooth
+    xlist += x
+
+  #smooth_nums, xlist = find_smooth(factor_b, n, I)
   print("smooth_nums: ", smooth_nums)
+
 
   if len(smooth_nums) < len(factor_b):
     return("Not enough smooth numbers. Increase the sieve interval or size of the factor base.")
@@ -207,9 +216,10 @@ def quad_sieve(n, I):
 
 if __name__ == "__main__":
   start_time = time.time()
-  #print(quad_sieve(16921456439215439701,10000000))
+  #print(quad_sieve(16921456439215439701,10000))
   
-  print(quad_sieve(46839566299936919234246726809, pow(10, 8)))
+  #print(quad_sieve(46839566299936919234246726809, pow(10, 4)))
   #print(quad_sieve(16921456439215439701, 100000000))
 
+  print(quad_sieve(3744843080529615909019181510330554205500926021947, 10000))
   print("--- %s seconds ---" % (time.time() - start_time))
