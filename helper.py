@@ -1,13 +1,23 @@
 from math import isqrt
 from itertools import chain
 
-def gcd(a,b): # Euclid's algorithm
-    if b == 0:
+def gcd(a, b):
+    """
+    This function computes the greatest common divisor (GCD) of two numbers using the Euclidean algorithm.
+
+    :param a: The first number.
+    :param b: The second number.
+    :return: The GCD of a and b.
+
+    Time complexity: O(log(min(a, b)))
+    """
+
+    if b == 0:  # If b is 0, the GCD is a
         return a
-    elif a >= b:
-        return gcd(b,a % b)
-    else:
-        return gcd(b,a)
+    elif a >= b:  # If a is greater than or equal to b, continue with the Euclidean algorithm
+        return gcd(b, a % b)  # Recursively call the function with b and a mod b
+    else:  # If b is greater than a, swap the values and call the function again
+        return gcd(b, a)
 
 def transpose(matrix):
 #transpose matrix so columns become rows, makes list comp easier to work with
@@ -70,7 +80,7 @@ def solve_row(sol_rows,M,marks,K=0):
     solution_vec.append(sol_rows[K][1])       
     return(solution_vec)
     
-def solve_1(solution_vec,smooth_nums,xlist,N):
+def solve(solution_vec,smooth_nums,xlist,N):
     
     solution_nums = [smooth_nums[i] for i in solution_vec]
     x_nums = [xlist[i] for i in solution_vec]
