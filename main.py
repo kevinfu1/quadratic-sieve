@@ -2,6 +2,7 @@ from math import fabs, ceil, sqrt, exp, log, isqrt
 import random
 from shanks import tonelli
 from util import block_lanczos, transpose
+from helper import gauss_elim, solve_row, solve_1
 
 #O( NLog(Log N))
 def sieve_of_eratosthenes(n):
@@ -36,24 +37,24 @@ def legendre_symbol(a, p):
 #changed factor base to add -1 as possibility as well incase number is negative
 def factor_base(n, b):
     primes = sieve_of_eratosthenes(b)
-    factor_base = [-1, 2]  # add -1 and 2 to the factor base
+    factor_base = [2]  # add -1 and 2 to the factor base
     for p in primes:
         if legendre_symbol(n, p) == 1:
             factor_base.append(p)
     return factor_base
 
-def find_smooth(factor_base, N):
+def find_smooth(factor_base, N, I):
     root = isqrt(N) + 1
     print("root = ", root)
 # tries to find B-smooth numbers in sieve_seq, using sieving, ie numbers in sieve_seq that have only prime factors in factor_base
 
-    def sieve_prep(N, root):
+    def sieve_prep(N, root, sieve_int):
     # generates a sequence from Y(x) = x^2 - N, starting at x = root 
-        sieve_seq = [(root+i)**2 - N for i in range(6 * len(factor_base))]
-
+        #sieve_seq = [(root+i)**2 - N for i in range(100000000 * len(factor_base))]
+        sieve_seq = [x**2 - N for x in range(root,root+sieve_int)]
         return sieve_seq
 
-    sieve_seq = sieve_prep(N, root)
+    sieve_seq = sieve_prep(N, root, I)
     sieve_list = sieve_seq.copy() # keep a copy of sieve_seq for later
     if factor_base[0] == 2:
         i = 0
@@ -72,21 +73,21 @@ def find_smooth(factor_base, N):
                 while sieve_list[i] % p == 0: #account for prime powers
                     sieve_list[i] //= p
                     
-    #xlist = [] #original x terms
-    print("sieve_seq: ", sieve_seq)
-    print("sieve_list: ", sieve_list)
+    xlist = [] #original x terms
+    #print("sieve_seq: ", sieve_seq)
+    #print("sieve_list: ", sieve_list)
     smooth_nums = []
     #indices = [] # index of discovery
     
     for i in range(len(sieve_list)):
-        if len(smooth_nums) >= len(factor_base): # found enough B-smooth numbers
+        if len(smooth_nums) >= len(factor_base) + 1: # found enough B-smooth numbers
             break
         if sieve_list[i] == 1: # found B-smooth number
             smooth_nums.append(sieve_seq[i])
-           # xlist.append(i+root)
+            xlist.append(i+root)
             #indices.append(i)
 
-    return smooth_nums
+    return smooth_nums, xlist
   
 def factor(n, factor_base):
     factors = []
@@ -104,6 +105,7 @@ def factor(n, factor_base):
 
 def build_matrix(smooth_nums,factor_base):
 # generates exponent vectors mod 2 from previously obtained smooth numbers, then builds matrix
+# so number of columns is
 
     M = []
     square_found = False
@@ -139,29 +141,66 @@ def generate_xs(smooth_nums, factor_base, N):
         x_list.append(x)
     return x_list
 
-def solve(t_matrix, is_square, n, smooth_nums, factor_b):
+def solve(t_matrix, is_square, n, smooth_nums, factor_b, xlist):
     if is_square:
         xs = generate_xs(smooth_nums, factor_b, n)
         factor_1, factor_2 = handleSquare(t_matrix, n, smooth_nums, xs)
     else:
         #solve matrix, how many iterations?
-        ln = block_lanczos(t_matrix, 10)
-    return factor_1, factor_2
+       #ln = block_lanczos(t_matrix, 10)
+       sol_rows, marks, M = gauss_elim(t_matrix)
+       print("M: ", M)
+       print("sol_rows: ", sol_rows)
+       solution_vec = solve_row(sol_rows, M, marks, 0)
+       print("solution_vec: ", solution_vec)
+       factor = solve_1(solution_vec, smooth_nums, xlist, n)
+       print("factor: ", factor)
+       for K in range(1,len(sol_rows)):
+        if (factor == 1 or factor == n):
+            print("Didn't work. Trying different solution vector...")
+            solution_vec = solve_row(sol_rows,M,marks,K)
+            factor = solve_1(solution_vec,smooth_nums,xlist,n)
+        else:
+            print("Found factors!")
+            return factor, int(n/factor)
+    return("Didn't find any nontrivial factors!")
+    #return factor_1, factor_2
 
-def quad_sieve(n):
+def quad_sieve(n, I):
   B = smoothness_bound(n)
   print("B = ", B)
   factor_b = factor_base(n, B)
   print("factor_base: ", factor_b)
-  smooth_nums = find_smooth(factor_b, n)
+  smooth_nums, xlist = find_smooth(factor_b, n, I)
   print("smooth_nums: ", smooth_nums)
+  #smooth_nums.append(3583125)
 
   print("Building matrix...")
   is_square, t_matrix = build_matrix(smooth_nums,factor_b)
-
-  factor_1, factor_2 = solve(t_matrix, is_square, n, smooth_nums, factor_b)
-  return factor_1, factor_2
+  print("Matrix built: ", t_matrix)
+  
+  if is_square:
+        xs = generate_xs(smooth_nums, factor_b, n)
+        factor_1, factor_2 = handleSquare(t_matrix, n, smooth_nums, xs)
+  else:
+    sol_rows, marks, M = gauss_elim(t_matrix)
+    print("M: ", M)
+    print("sol_rows: ", sol_rows)
+    solution_vec = solve_row(sol_rows, M, marks, 0)
+    print("solution_vec: ", solution_vec)
+    factor = solve_1(solution_vec, smooth_nums, xlist, n)
+    print("factor: ", factor)
+    for K in range(1,len(sol_rows)):
+      if (factor == 1 or factor == n):
+          print("Didn't work. Trying different solution vector...")
+          solution_vec = solve_row(sol_rows,M,marks,K)
+          factor = solve_1(solution_vec,smooth_nums,xlist,n)
+      else:
+          print("Found factors!")
+          return factor, int(n/factor)
+  
+  return("Didn't find any nontrivial factors!")
 
 
 if __name__ == "__main__":
-  quad_sieve(227179)
+  print(quad_sieve(227179, 10000))

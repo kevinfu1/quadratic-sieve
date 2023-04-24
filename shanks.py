@@ -13,9 +13,11 @@ def tonelli(n, p):
     if s == 1:
         r = pow(n, (p + 1) // 4, p)
         return r, p - r
+    z = 1
     for z in range(2, p):
         if p - 1 == legendre(z, p):
             break
+    #print("z = ", z)
     c = pow(z, q, p)
     r = pow(n, (q + 1) // 2, p)
     t = pow(n, q, p)
