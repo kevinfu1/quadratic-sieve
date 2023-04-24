@@ -3,6 +3,7 @@ import random
 from shanks import tonelli
 from util import block_lanczos, transpose
 from helper import gauss_elim, solve_row, solve_1
+import time
 
 #O( NLog(Log N))
 def sieve_of_eratosthenes(n):
@@ -174,7 +175,7 @@ def quad_sieve(n, I):
   smooth_nums, xlist = find_smooth(factor_b, n, I)
   print("smooth_nums: ", smooth_nums)
 
-  if len(smooth_nums) < len(factor_base):
+  if len(smooth_nums) < len(factor_b):
     return("Not enough smooth numbers. Increase the sieve interval or size of the factor base.")
 
   print("Building matrix...")
@@ -205,4 +206,8 @@ def quad_sieve(n, I):
 
 
 if __name__ == "__main__":
-  print(quad_sieve(227179, 10000))
+  start_time = time.time()
+  print(quad_sieve(16921456439215439701,10000000))
+  print("--- %s seconds ---" % (time.time() - start_time))
+  #print(quad_sieve(46839566299936919234246726809, pow(10, 15)))
+  #print(quad_sieve(16921456439215439701, 100000000))
