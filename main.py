@@ -53,7 +53,6 @@ def legendre_symbol(a, p):
     return ls if ls == 1 else -1  # Returning the symbol, which is either 1 or -1 depending on the result of the computation
 
 
-# Time complexity: O(n * log(log(n))) due to sieve_of_eratosthenes call
 def factor_base(n, b):
     """
     This function computes the factor base for the quadratic sieve algorithm.
