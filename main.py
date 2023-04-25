@@ -211,7 +211,7 @@ def quad_sieve(n, I):
   
   if is_square:
         factor_1, factor_2 = handleSquare(t_matrix, n, smooth_nums, xlist)
-        print('square found')
+        print('Square Found!')
         return factor_1, factor_2
   else:
     sol_rows, marks, M = gauss_elim(t_matrix)
@@ -242,6 +242,6 @@ if __name__ == "__main__":
     #print(quad_sieve(6172835808641975203638304919691358469663, pow(10, 4)))
 
     #print(quad_sieve(3744843080529615909019181510330554205500926021947, 10000))
-    #print(quad_sieve(125513, 10000))
+    print(quad_sieve(125513, 10000))
 
     print("--- %s seconds ---" % (time.time() - start_time))
