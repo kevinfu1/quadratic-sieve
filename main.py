@@ -179,22 +179,11 @@ def handleSquare(M, n, smooth_nums, xlist):
     factor_1 = None
     factor_2 = None
     x = smooth_nums.index(M)
+    print(x)
+    print(xlist)
     factor_1 = gcd(xlist[x] + sqrt(M), n)
     factor_2 = n // factor_1
     return factor_1, factor_2
-
-# Generates x values for the quadratic sieve algorithm
-def generate_xs(smooth_nums, factor_base, N):
-    root = isqrt(N) + 1
-    x_list = []
-    for n in smooth_nums:
-        x = root
-        for p in factor(n, factor_base):
-            if p != -1:
-                while x % p == 0 and (x**2 - N) // n % p == 0:
-                    x //= p
-        x_list.append(x)
-    return x_list
 
 def quad_sieve(n, I):
   B = smoothness_bound(n)
@@ -221,8 +210,9 @@ def quad_sieve(n, I):
   print("Matrix built: ", t_matrix)
   
   if is_square:
-        xs = generate_xs(smooth_nums, factor_b, n)
-        factor_1, factor_2 = handleSquare(t_matrix, n, smooth_nums, xs)
+        factor_1, factor_2 = handleSquare(t_matrix, n, smooth_nums, xlist)
+        print('square found')
+        return factor_1, factor_2
   else:
     sol_rows, marks, M = gauss_elim(t_matrix)
     print("M: ", M)
@@ -251,5 +241,7 @@ if __name__ == "__main__":
 
     #print(quad_sieve(6172835808641975203638304919691358469663, pow(10, 4)))
 
-    print(quad_sieve(3744843080529615909019181510330554205500926021947, 10000))
+    #print(quad_sieve(3744843080529615909019181510330554205500926021947, 10000))
+    #print(quad_sieve(125513, 10000))
+
     print("--- %s seconds ---" % (time.time() - start_time))
