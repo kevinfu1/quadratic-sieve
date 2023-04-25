@@ -296,11 +296,13 @@ def quad_sieve(n, I):
     return "Didn't find any nontrivial factors!"
 
 if __name__ == "__main__":
-    start_time = time.time()
-
-    # print(quad_sieve(16921456439215439701,pow(10, 4)))
-    print(quad_sieve(46839566299936919234246726809, pow(10, 4)))
-    # print(quad_sieve(6172835808641975203638304919691358469663, pow(10, 4)))
-    # print(quad_sieve(3744843080529615909019181510330554205500926021947, pow(10, 4)))
-
-    print("--- %s seconds ---" % (time.time() - start_time))
+    
+    tests = [16921456439215439701, 
+             46839566299936919234246726809,
+             6172835808641975203638304919691358469663,
+             3744843080529615909019181510330554205500926021947]
+    
+    for test in tests:
+        start_time = time.time()
+        print(quad_sieve(test, pow(10, 4)))
+        print("--- %s seconds ---" % (time.time() - start_time))
