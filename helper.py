@@ -19,20 +19,30 @@ def gcd(a, b):
     else:  # If b is greater than a, swap the values and call the function again
         return gcd(b, a)
 
-def transpose(matrix):
-#transpose matrix so columns become rows, makes list comp easier to work with
-    new_matrix = []
-    for i in range(len(matrix[0])):
-        new_row = []
-        for row in matrix:
-            new_row.append(row[i])
-        new_matrix.append(new_row)
-    return(new_matrix)
+def transpose(matrix: list) -> list:
+    """
+    Transposes a matrix.
 
-def gauss_elim(M):
+    :param matrix: A list of lists representing the matrix to be transposed.
+    :return: A new matrix with the rows and columns of the original matrix swapped.
+
+    Time Complexity: O(r*c), where r and c are the number of rows and columns respectively
+    """
+
+    new_matrix = []
+    for i in range(len(matrix[0])):  # Iterate over each column of the matrix. O(c)
+        new_row = []
+        for row in matrix:  # Iterate over each row of the matrix. O(r)
+            new_row.append(row[i])  # Append the ith element of each row to a new row. O(1)
+        new_matrix.append(new_row)  # Append the new row to the new matrix. O(1)
+    return new_matrix  # O(1)
+
+
 #reduced form of gaussian elimination, finds rref and reads off the nullspace
 #https://www.cs.umd.edu/~gasarch/TOPICS/factoring/fastgauss.pdf
-    
+
+def gauss_elim(M):
+
     #M = optimize(M)
     marks = [False]*len(M[0])
     
