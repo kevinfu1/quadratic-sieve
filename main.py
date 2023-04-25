@@ -210,30 +210,6 @@ def handleSquare(M, n, smooth_nums, xlist):
     
     return factor_1, factor_2  # Return the two factors of n as a tuple
 
-def generate_xs(smooth_nums, factor_base, N):
-    """
-    This function generates a list of x values for the smooth numbers in the matrix.
-
-    :param smooth_nums: A list of smooth numbers.
-    :param factor_base: The factor base to be used.
-    :param N: The number to be factored.
-    :return: A list of x values corresponding to the smooth numbers.
-
-    Time complexity: O(k^2 * log(N)), where k is the size of the factor base.
-    """
-    root = isqrt(N) + 1  # Compute the square root of N and add 1 to get the starting value of x
-    x_list = []  # Initialize the list of x values to an empty list
-    for n in smooth_nums:  # Iterate through the list of smooth numbers
-        x = root  # Initialize x to the starting value
-        for p in factor(n, factor_base):  # Iterate through the prime factors of the smooth number
-            if p != -1:
-                # While x is divisible by p and (x^2 - N) / n is divisible by p, divide x by p
-                while x % p == 0 and (x**2 - N) // n % p == 0:
-                    x //= p
-        x_list.append(x)  # Add the final value of x to the list
-    return x_list  # Return the list of x values
-
-
 def quad_sieve(n, I):
     """
     Factorizes n using the quadratic sieve algorithm.
@@ -269,8 +245,8 @@ def quad_sieve(n, I):
 
     if is_square:
         # If the matrix is square, handle the case where one of the factors is a perfect square. O(B * log(n))
-        xs = generate_xs(smooth_nums, factor_b, n)
-        factor_1, factor_2 = handleSquare(t_matrix, n, smooth_nums, xs)
+        factor_1, factor_2 = handleSquare(t_matrix, n, smooth_nums, xlist)
+        return factor_1, factor_2
     else:
         # Otherwise, perform Gaussian elimination on the matrix to find a solution vector. O(B^3)
         sol_rows, marks, M = gauss_elim(t_matrix)
@@ -297,7 +273,8 @@ def quad_sieve(n, I):
 
 if __name__ == "__main__":
     
-    tests = [16921456439215439701, 
+    tests = [125513,
+             16921456439215439701, 
              46839566299936919234246726809,
              6172835808641975203638304919691358469663,
              3744843080529615909019181510330554205500926021947]
